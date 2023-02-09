@@ -299,14 +299,18 @@ void write_highlights(std::vector<Round> rounds, std::string playername, std::os
     os << "set hl_old_maxfps $cl_maxfps\n";
     os << "set hl_old_name $name\n";
     os << "cl_maxfps " << fps << '\n';
-    os << "name MVD_HIGHLIGHTS\n";
+    os << "name MVDHIGHLIGHTS\n";
+    os << "draw hl_reason 40 40 5\n";
     os << "wait " << fps << '\n';
     for (const auto& round : rounds) {
         auto hl_opt = round.get_highlight(playername);
         if (hl_opt) {
             auto hl = hl_opt.value();
-            say_with_dots(hl.reason);
+            os << "hl_reason " << hl.reason << '\n';
             os << "seek " << timepoint_printer{hl.start-3s} << '\n';
+            for (int i = 0; i < 3; i++) {
+                os << "say ..........\n";
+            }
             os << "pause\n";
             os << "wait " << fps << '\n';
             os << "pause\n";
@@ -314,10 +318,14 @@ void write_highlights(std::vector<Round> rounds, std::string playername, std::os
             os << "wait " << (hl.end - hl.start+2s).count() << '\n';
         }
     }
-    say_with_dots("End of highlights");
+    os << "hl_reason End of highlights.\n";
     os << "pause\n";
+    os << "wait " << fps*2 << '\n';
+    os << "hl_reason \"\"\n";
+    os << "undraw hl_reason\n";
     os << "set cl_maxfps $hl_old_maxfps\n";
     os << "set name $hl_old_name\n";
+    os << "disconnect\n";
 }
 
 int main(int argc, const char* argv[]) {
@@ -340,9 +348,9 @@ int main(int argc, const char* argv[]) {
     std::string playername = parser.get<std::string>("player");
     std::cout << std::setw(2) << std::setfill('0');
     auto rounds = parse(std::cin);
-    for (auto& round : rounds) {
-        std::cout << round;
-    }
+    //for (auto& round : rounds) {
+      //  std::cout << round;
+    //}
     std::ofstream ofs("highlights.cfg");
     write_highlights(rounds, playername, ofs);
 }
